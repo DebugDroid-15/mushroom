@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soil Monitoring Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            padding: 0;
+            color: #333;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            padding: 0;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 25px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .sidebar-logo {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .sidebar-title {
+            color: #fff;
+            font-size: 1.1em;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-left-color: #3498db;
+        }
+
+        .nav-item.active {
+            background: rgba(52, 152, 219, 0.2);
+            color: #fff;
+            border-left-color: #3498db;
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            font-size: 1.3em;
+            margin-right: 12px;
+            min-width: 25px;
+        }
+
+        .nav-text {
+            font-size: 0.95em;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 20px;
+            background: #ffffff;
+            position: relative;
+        }
+
+        .system-off-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            border-radius: 0;
+        }
+
+        .system-off-overlay.active {
+            display: flex;
+        }
+
+        .system-off-message {
+            text-align: center;
+            color: #fff;
+            z-index: 1000;
+        }
+
+        .system-off-message h1 {
+            font-size: 4em;
+            font-weight: 700;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        .system-off-message p {
+            font-size: 1.5em;
+            opacity: 0.8;
+        }
+
+        .sidebar-footer {
+            position: relative;
+            width: 100%;
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            margin-top: auto;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+        }
+
+        .toggle-label {
+            color: #fff;
+            font-size: 0.95em;
+            font-weight: 600;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 26px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #2ecc71;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            color: #1a252f;
+        }
+
+        header p {
+            font-size: 0.95em;
+            opacity: 0.75;
+            letter-spacing: 0.5px;
+            color: #444;
+            font-weight: 500;
+        }
+
+        .dashboard-sections {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .section {
+            background: #f8f9fa;
+            backdrop-filter: blur(10px);
+            border: 1px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 35px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-title {
+            font-size: 1.1em;
+            font-weight: 700;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 1;
+            color: #1a252f;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        .card {
+            background: #ffffff;
+            backdrop-filter: blur(8px);
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            padding: 24px 32px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            background: #ffffff;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+            border-color: #d0d0d0;
+        }
+
+        .card-label {
+            font-size: 0.85em;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 14px;
+            font-weight: 700;
+            color: #555;
+        }
+
+        .card-value {
+            font-size: 2.4em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .card-unit {
+            font-size: 0.9em;
+            opacity: 0.65;
+            color: #888;
+        }
+
+        .card.moisture .card-value { color: #2196f3; }
+
+        .card.temperature .card-value { color: #ff5722; }
+
+        .card.ph .card-value { color: #4caf50; }
+
+        .card.ec .card-value { color: #ff9800; }
+
+        .card.nitrogen .card-value { color: #9c27b0; }
+
+        .card.phosphorus .card-value { color: #fbc02d; }
+
+        .card.potassium .card-value { color: #f44336; }
+
+        .chart-section {
+            background: #f8f9fa;
+            backdrop-filter: blur(10px);
+            border: 1px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .chart-header h2 {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #1a252f;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .chart-controls label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            font-weight: 600;
+            color: #444;
+        }
+
+        .chart-controls select {
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background: #ffffff;
+            color: #333;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .chart-controls select:hover {
+            background: #f5f5f5;
+            border-color: #999;
+        }
+
+        .chart-controls select option {
+            background: #ffffff;
+            color: #333;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 15px;
+            }
+
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .dashboard-sections {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .chart-header h2 {
+                font-size: 1.3em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 100%;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 10px;
+            }
+
+            header h1 {
+                font-size: 1.5em;
+            }
+
+            .dashboard-sections {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+
+            .card-value {
+                font-size: 1.4em;
+            }
+
+            .section-title {
+                font-size: 1em;
+                margin-bottom: 15px;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
+
+            .sidebar-nav {
+                display: flex;
+                overflow-x: auto;
+                padding: 10px 0;
+            }
+
+            .nav-item {
+                padding: 10px 15px;
+                white-space: nowrap;
+                border-left: none;
+                border-bottom: 3px solid transparent;
+            }
+
+            .nav-item:hover,
+            .nav-item.active {
+                border-bottom-color: #3498db;
+                border-left: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">🌱</div>
+            <h3 class="sidebar-title">Soil Monitor</h3>
+            <p class="sidebar-subtitle">IoT Dashboard</p>
+        </div>
+        <nav class="sidebar-nav">
+            <a class="nav-item active" href="#dashboard">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">Dashboard</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="toggle-container">
+                <span class="toggle-label">System</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="systemToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+        <header>
+            <h1>Smart Soil Monitoring Dashboard</h1>
+            <p>Real-time soil health parameters monitoring system</p>
+        </header>
+
+        <div class="dashboard-sections">
+            <!-- NPK Section -->
+            <div class="section">
+                <div class="section-title">🌱 NPK Values</div>
+                <div class="dashboard-grid">
+                    <div class="card nitrogen">
+                        <div class="card-label">Nitrogen</div>
+                        <div class="card-value" id="nitrogen">185</div>
+                        <div class="card-unit">mg/kg</div>
+                    </div>
+
+                    <div class="card phosphorus">
+                        <div class="card-label">Phosphorus</div>
+                        <div class="card-value" id="phosphorus">142</div>
+                        <div class="card-unit">mg/kg</div>
+                    </div>
+
+                    <div class="card potassium">
+                        <div class="card-label">Potassium</div>
+                        <div class="card-value" id="potassium">210</div>
+                        <div class="card-unit">mg/kg</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Moisture & Humidity Section -->
+            <div class="section">
+                <div class="section-title">💧 Moisture & Temperature</div>
+                <div class="dashboard-grid">
+                    <div class="card moisture">
+                        <div class="card-label">Soil Moisture</div>
+                        <div class="card-value" id="moisture">65.4</div>
+                        <div class="card-unit">%</div>
+                    </div>
+
+                    <div class="card temperature">
+                        <div class="card-label">Temperature</div>
+                        <div class="card-value" id="temperature">28.3</div>
+                        <div class="card-unit">°C</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- pH & Conductivity Section -->
+            <div class="section">
+                <div class="section-title">⚗️ pH & Conductivity</div>
+                <div class="dashboard-grid">
+                    <div class="card ph">
+                        <div class="card-label">pH Level</div>
+                        <div class="card-value" id="ph">6.8</div>
+                        <div class="card-unit">pH</div>
+                    </div>
+
+                    <div class="card ec">
+                        <div class="card-label">Conductivity</div>
+                        <div class="card-value" id="ec">1250</div>
+                        <div class="card-unit">µS/cm</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <div class="chart-header">
+                <h2>Real-Time Trend Analysis</h2>
+                <div class="chart-controls">
+                    <label for="parameter-select">Plot Parameter:</label>
+                    <select id="parameter-select">
+                        <option value="moisture">Soil Moisture (%)</option>
+                        <option value="temperature">Temperature (°C)</option>
+                        <option value="ph">pH Level</option>
+                        <option value="ec">Conductivity (µS/cm)</option>
+                        <option value="nitrogen">Nitrogen (mg/kg)</option>
+                        <option value="phosphorus">Phosphorus (mg/kg)</option>
+                        <option value="potassium">Potassium (mg/kg)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- System Off Overlay - Only covers main-content -->
+        <div class="system-off-overlay">
+            <div class="system-off-message">
+                <h1>⚫</h1>
+                <p>System is OFF</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data storage and configuration
+        const dataStore = {
+            moisture: { label: 'Soil Moisture (%)', min: 20, max: 80, current: 65, color: '#64b5f6', data: [] },
+            temperature: { label: 'Temperature (°C)', min: 20, max: 40, current: 28, color: '#ff7043', data: [] },
+            ph: { label: 'pH Level', min: 5.5, max: 7.5, current: 6.8, color: '#81c784', data: [] },
+            ec: { label: 'Conductivity (µS/cm)', min: 300, max: 2000, current: 1250, color: '#ffa726', data: [] },
+            nitrogen: { label: 'Nitrogen (mg/kg)', min: 50, max: 400, current: 185, color: '#ab47bc', data: [] },
+            phosphorus: { label: 'Phosphorus (mg/kg)', min: 50, max: 400, current: 142, color: '#ffee58', data: [] },
+            potassium: { label: 'Potassium (mg/kg)', min: 50, max: 400, current: 210, color: '#ef5350', data: [] }
+        };
+
+        // Initialize chart data
+        Object.keys(dataStore).forEach(key => {
+            for (let i = 0; i < 25; i++) {
+                dataStore[key].data.push(dataStore[key].current);
+            }
+        });
+
+        // Chart.js instance
+        let chart = null;
+
+        // Initialize Chart
+        function initializeChart() {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            const selectedParam = document.getElementById('parameter-select').value;
+            const paramData = dataStore[selectedParam];
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({ length: paramData.data.length }, (_, i) => i),
+                    datasets: [{
+                        label: paramData.label,
+                        data: paramData.data,
+                        borderColor: paramData.color,
+                        backgroundColor: paramData.color + '20',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: paramData.color
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#fff',
+                                font: { size: 12 },
+                                padding: 15,
+                                usePointStyle: true
+                            }
+                        },
+                        filler: true
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                font: { size: 11 }
+                            }
+                        },
+                        x: {
+                            display: false,
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update chart on parameter selection
+        document.getElementById('parameter-select').addEventListener('change', (e) => {
+            if (chart) {
+                chart.destroy();
+            }
+            initializeChart();
+        });
+
+        // Generate realistic data with slight random variation
+        function updateData() {
+            Object.keys(dataStore).forEach(key => {
+                const param = dataStore[key];
+                const range = param.max - param.min;
+                const change = (Math.random() - 0.5) * range * 0.05; // 5% variation
+                const newValue = Math.max(param.min, Math.min(param.max, param.current + change));
+                param.current = newValue;
+
+                // Add to data array and keep only last 25 points
+                param.data.push(Number(newValue.toFixed(1)));
+                if (param.data.length > 25) {
+                    param.data.shift();
+                }
+
+                // Update card display
+                const elementId = key;
+                const element = document.getElementById(elementId);
+                if (element) {
+                    if (key === 'ec' || key === 'nitrogen' || key === 'phosphorus' || key === 'potassium') {
+                        element.textContent = Math.round(newValue);
+                    } else if (key === 'ph') {
+                        element.textContent = newValue.toFixed(1);
+                    } else {
+                        element.textContent = newValue.toFixed(1);
+                    }
+                }
+            });
+
+            // Update chart
+            if (chart) {
+                const selectedParam = document.getElementById('parameter-select').value;
+                const paramData = dataStore[selectedParam];
+                chart.data.datasets[0].data = paramData.data;
+                chart.update('none');
+            }
+        }
+
+        // Update every 2 seconds
+        setInterval(updateData, 2000);
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeChart();
+        });
+
+        // System Toggle Functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const systemToggle = document.getElementById('systemToggle');
+            const systemOffOverlay = document.querySelector('.system-off-overlay');
+
+            if (systemToggle && systemOffOverlay) {
+                systemToggle.addEventListener('change', (e) => {
+                    if (!e.target.checked) {
+                        // System is off
+                        systemOffOverlay.classList.add('active');
+                    } else {
+                        // System is on
+                        systemOffOverlay.classList.remove('active');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

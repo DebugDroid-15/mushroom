@@ -1,0 +1,17 @@
+[Unit]
+Description=Soil Monitoring System
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/soil-monitor
+Environment="PATH=/home/pi/soil-monitor/venv/bin"
+ExecStart=/home/pi/soil-monitor/venv/bin/python3 app.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

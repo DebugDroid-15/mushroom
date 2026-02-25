@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soil Monitoring Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            padding: 0;
+            margin: 0;
+            display: flex;
+        }
+
+        /* Navbar Styling */
+        .navbar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            display: flex;
+            flex-direction: column;
+            padding-top: 0;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+            z-index: 100;
+            overflow-y: auto;
+        }
+
+        /* Navbar Logo Section */
+        .navbar-logo {
+            background: rgba(0,0,0,0.2);
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .navbar-logo-img {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 10px;
+            background: #ecf0f1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+        }
+
+        .navbar-company-name {
+            color: #ecf0f1;
+            font-size: 0.85em;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        /* Page Name Display */
+        .navbar-page-name {
+            color: #bdc3c7;
+            font-size: 0.8em;
+            padding: 0 10px;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: transparent;
+            color: #ecf0f1;
+            border-left: 4px solid transparent;
+            position: relative;
+            margin: 0 10px;
+            border-radius: 0 8px 8px 0;
+            font-size: 1em;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.15);
+            border-left-color: #3498db;
+        }
+
+        .nav-item.active {
+            background: rgba(52, 152, 219, 0.3);
+            border-left-color: #3498db;
+        }
+
+        .nav-item-icon {
+            font-size: 1.3em;
+            min-width: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-item-label {
+            flex: 1;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+
+        /* Navigation Items Container */
+        .navbar-items {
+            flex: 1;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .nav-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7em;
+            font-weight: bold;
+            border: 2px solid #34495e;
+        }
+
+        /* Main content area */
+        .main-content {
+            margin-left: 280px;
+            width: calc(100% - 280px);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* Alert popup notification */
+        .alert-popup {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fff;
+            border-left: 4px solid #e74c3c;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-width: 400px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .alert-popup.success {
+            border-left-color: #27ae60;
+        }
+
+        .alert-popup.warning {
+            border-left-color: #f39c12;
+        }
+
+        .alert-popup-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+
+        .alert-popup-message {
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.2em;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        header p {
+            color: #7f8c8d;
+            font-size: 1em;
+        }
+
+        .status-bar {
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95em;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #e74c3c;
+        }
+
+        .status-dot.connected {
+            background: #27ae60;
+        }
+
+        .refresh-info {
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+
+        .sensors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .sensor-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #3498db;
+        }
+
+        .sensor-card.error {
+            border-left-color: #e74c3c;
+            opacity: 0.7;
+        }
+
+        .sensor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .sensor-card h2 {
+            font-size: 1.3em;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+
+        .sensor-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Control Buttons */
+        .control-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #ecf0f1;
+            color: #2c3e50;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .control-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .control-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .control-button.enabled {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+
+        .control-button.disabled {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .button-icon {
+            font-size: 1.1em;
+        }
+
+        .button-text {
+            font-size: 0.9em;
+        }
+
+        /* Disabled Card Display */
+        .disabled-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 250px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.5), rgba(245,245,245,0.8));
+            border-radius: 8px;
+            border: 2px dashed #ddd;
+            text-align: center;
+            color: #7f8c8d;
+        }
+
+        .disabled-content-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            opacity: 0.6;
+        }
+
+        .disabled-content-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .disabled-content-text {
+            font-size: 0.95em;
+            color: #7f8c8d;
+        }
+
+        .sensor-card.disabled {
+            background: #f9f9f9;
+            opacity: 0.8;
+        }
+
+        /* Disconnected sensor overlay */
+        .sensor-card.disconnected {
+            position: relative;
+            opacity: 0.6;
+        }
+
+        .disconnected-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            backdrop-filter: blur(2px);
+        }
+
+        .disconnected-overlay-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            opacity: 0.7;
+        }
+
+        .disconnected-overlay-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #c0392b;
+            margin-bottom: 5px;
+        }
+
+        .disconnected-overlay-text {
+            font-size: 0.95em;
+            color: #7f8c8d;
+            text-align: center;
+        }
+
+        .parameter-group {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .parameter-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .group-label {
+            font-size: 0.85em;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .parameter {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .parameter-name {
+            font-weight: 500;
+            color: #555;
+            font-size: 0.95em;
+        }
+
+        .parameter-value {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .parameter-unit {
+            font-size: 0.8em;
+            color: #7f8c8d;
+            margin-left: 5px;
+        }
+
+        .error-message {
+            background: #fadbd8;
+            color: #c0392b;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #ecf0f1;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .sensor-icon {
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                width: 240px;
+            }
+
+            .main-content {
+                margin-left: 240px;
+                width: calc(100% - 240px);
+                padding: 15px;
+            }
+
+            .navbar-logo {
+                padding: 20px 15px;
+            }
+
+            .navbar-logo-img {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5em;
+            }
+
+            .navbar-company-name {
+                font-size: 0.8em;
+            }
+
+            .nav-item {
+                padding: 12px 15px;
+                font-size: 0.9em;
+                margin: 0 5px;
+            }
+
+            header h1 {
+                font-size: 1.5em;
+            }
+
+            .sensors-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sensor-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .sensor-controls {
+                width: 100%;
+            }
+
+            .control-button {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Left Navigation Bar -->
+    <div class="navbar">
+        <!-- Logo Section -->
+        <div class="navbar-logo">
+            <div class="navbar-logo-img">🌱</div>
+            <div class="navbar-company-name">SUBSTRATE MONITOR</div>
+            <div class="navbar-page-name" id="pageName">Dashboard</div>
+        </div>
+
+        <!-- Navigation Items -->
+        <div class="navbar-items">
+            <div class="nav-item active" id="dashboardBtn" onclick="showDashboard()">
+                <span class="nav-item-icon">📊</span>
+                <span class="nav-item-label">Dashboard</span>
+            </div>
+            <div class="nav-item" id="alertsBtn" onclick="showAlerts()">
+                <span class="nav-item-icon">🔔</span>
+                <span class="nav-item-label">Alerts</span>
+                <span class="nav-badge" id="alertBadge" style="display:none;">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <div id="dashboardPage" class="page">
+            <div class="container">
+        <header>
+            <h1>🌱 Substrate Monitoring System</h1>
+            <p>Real-time NPK 8-Parameter Sensor Monitoring with Humidifier Control</p>
+        </header>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-dot"></span>
+                <span>System Status: <strong id="statusText">Connecting...</strong></span>
+            </div>
+            <div class="refresh-info">
+                Last update: <span id="lastUpdate">--:--:--</span>
+            </div>
+        </div>
+
+        <div class="sensors-grid" id="sensorsContainer">
+            <div class="loading">
+                <span class="spinner"></span>
+                Loading sensor data...
+            </div>
+        </div>
+            </div>
+        </div>
+
+        <div id="alertsPage" class="page" style="display:none;">
+            <div class="container">
+                <header>
+                    <h1>🔔 Alert Notifications</h1>
+                    <p>System Alerts and Warnings</p>
+                </header>
+                <div id="alertsList" style="background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <p style="color: #7f8c8d; text-align: center; padding: 40px 0;">No alerts at this time</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE = window.location.origin;
+        const POLL_INTERVAL = 5000; // 5 seconds
+        const SENSOR_IDS = [1, 2, 3, 4];
+        let alerts = [];
+
+        // Store sensor and humidifier enable/disable states
+        const sensorStates = { 1: { enabled: true }, 2: { enabled: true }, 3: { enabled: true }, 4: { enabled: true } };
+        const humidifierStates = { 1: { enabled: true }, 2: { enabled: true }, 3: { enabled: true }, 4: { enabled: true } };
+        
+        // Track previous humidity for each sensor to detect transitions
+        const humidityState = { 1: null, 2: null, 3: null, 4: null };
+
+        function toggleSensor(sensorId) {
+            sensorStates[sensorId].enabled = !sensorStates[sensorId].enabled;
+            const status = sensorStates[sensorId].enabled ? 'enabled' : 'disabled';
+            showAlertPopup(`Sensor ${sensorId} ${status.toUpperCase()}`, `Sensor ${sensorId} is now ${status}`, sensorStates[sensorId].enabled ? 'success' : 'warning');
+            if (!sensorStates[sensorId].enabled) humidifierStates[sensorId].enabled = false;
+            updateSensorData();
+        }
+
+        function toggleHumidifier(sensorId) {
+            if (!sensorStates[sensorId].enabled) { showAlertPopup('⚠️ Cannot Control Humidifier', `Enable Sensor ${sensorId} first`, 'warning'); return; }
+            humidifierStates[sensorId].enabled = !humidifierStates[sensorId].enabled;
+            const status = humidifierStates[sensorId].enabled ? 'enabled' : 'disabled';
+            showAlertPopup(`Humidifier ${sensorId} ${status.toUpperCase()}`, `Humidifier ${sensorId} is now ${status}`, humidifierStates[sensorId].enabled ? 'success' : 'warning');
+            updateSensorData();
+        }
+
+        function formatTime(date) { return date.toLocaleTimeString(); }
+
+        // Navigation functions
+        function showDashboard() {
+            document.getElementById('dashboardPage').style.display = 'block';
+            document.getElementById('alertsPage').style.display = 'none';
+            document.getElementById('dashboardBtn').classList.add('active');
+            document.getElementById('alertsBtn').classList.remove('active');
+            document.getElementById('pageName').textContent = 'Dashboard';
+        }
+
+        function showAlerts() {
+            document.getElementById('dashboardPage').style.display = 'none';
+            document.getElementById('alertsPage').style.display = 'block';
+            document.getElementById('dashboardBtn').classList.remove('active');
+            document.getElementById('alertsBtn').classList.add('active');
+            document.getElementById('pageName').textContent = 'Alerts';
+            renderAlerts();
+        }
+
+        // Show alert popup notification
+        function showAlertPopup(title, message, type = 'error') {
+            const popup = document.createElement('div');
+            popup.className = `alert-popup ${type}`;
+            popup.innerHTML = `
+                <div class="alert-popup-title">${title}</div>
+                <div class="alert-popup-message">${message}</div>
+            `;
+            document.body.appendChild(popup);
+
+            // Add to alerts list
+            alerts.unshift({
+                title: title,
+                message: message,
+                type: type,
+                timestamp: new Date()
+            });
+
+            // Update badge
+            updateAlertBadge();
+
+            // Remove popup after 5 seconds
+            setTimeout(() => {
+                popup.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => popup.remove(), 300);
+            }, 5000);
+        }
+
+        function updateAlertBadge() {
+            const badge = document.getElementById('alertBadge');
+            const count = alerts.length;
+            if (count > 0) {
+                badge.textContent = count > 9 ? '9+' : count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function renderAlerts() {
+            const alertsList = document.getElementById('alertsList');
+            if (alerts.length === 0) {
+                alertsList.innerHTML = '<p style="color: #7f8c8d; text-align: center; padding: 40px 0;">No alerts at this time</p>';
+                return;
+            }
+
+            let html = '<div style="max-height: 600px; overflow-y: auto;">';
+            alerts.forEach((alert, index) => {
+                const colorMap = {
+                    'error': '#e74c3c',
+                    'warning': '#f39c12',
+                    'success': '#27ae60'
+                };
+                const color = colorMap[alert.type] || '#3498db';
+                html += `
+                    <div style="border-left: 4px solid ${color}; padding: 15px; margin-bottom: 10px; background: #f8f9fa; border-radius: 5px;">
+                        <div style="font-weight: bold; color: #2c3e50; margin-bottom: 5px;">${alert.title}</div>
+                        <div style="color: #555; font-size: 0.9em; margin-bottom: 5px;">${alert.message}</div>
+                        <div style="color: #7f8c8d; font-size: 0.8em;">${alert.timestamp.toLocaleString()}</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            alertsList.innerHTML = html;
+        }
+        function createSensorCard(sensorId, data) {
+            // Check if sensor is disconnected (sensors 2, 3, 4 are not connected)
+            if (sensorId > 1 && (!data || !data.is_valid)) {
+                return `
+                    <div class="sensor-card disconnected">
+                        <div class="sensor-header">
+                            <h2><span class="sensor-icon">📊</span>Sensor ${sensorId}</h2>
+                            <div class="sensor-controls">
+                                <button class="control-button disabled" title="Sensor not connected">
+                                    <span class="button-icon">❌</span>
+                                    <span class="button-text">OFF</span>
+                                </button>
+                                <button class="control-button disabled" title="Sensor not connected">
+                                    <span class="button-icon">❌</span>
+                                    <span class="button-text">💧</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- NPK Parameters -->
+                        <div class="parameter-group">
+                            <div class="group-label">NPK Values</div>
+                            <div class="parameter">
+                                <span class="parameter-name">Nitrogen (N)</span>
+                                <span>
+                                    <span class="parameter-value">--</span>
+                                    <span class="parameter-unit">mg/kg</span>
+                                </span>
+                            </div>
+                            <div class="parameter">
+                                <span class="parameter-name">Phosphorus (P)</span>
+                                <span>
+                                    <span class="parameter-value">--</span>
+                                    <span class="parameter-unit">mg/kg</span>
+                                </span>
+                            </div>
+                            <div class="parameter">
+                                <span class="parameter-name">Potassium (K)</span>
+                                <span>
+                                    <span class="parameter-value">--</span>
+                                    <span class="parameter-unit">mg/kg</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Substrate Parameters -->
+                        <div class="parameter-group">
+                            <div class="group-label">📋 Substrate Properties</div>
+                            <div class="parameter">
+                                <span class="parameter-name">Substrate pH</span>
+                                <span>
+                                    <span class="parameter-value">--</span>
+                                    <span class="parameter-unit">pH</span>
+                                </span>
+                            </div>
+                            <div class="parameter">
+                                <span class="parameter-name">Electrical Conductivity</span>
+                                <span>
+                                    <span class="parameter-value">--</span>
+                                    <span class="parameter-unit">mS/cm</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Environment Parameters -->
+                        <div class="parameter-group">
+                            <div class="group-label">🌡️ Environment</div>
+                            <div class="parameter">
+                                <span class="parameter-name">Temperature</span>
+                                <span>
+                                    <span class="parameter-value">--</span>
+                                    <span class="parameter-unit">°C</span>
+                                </span>
+                            </div>
+                            <div class="parameter">
+                                <span class="parameter-name">Humidity</span>
+                                <span>
+                                    <span class="parameter-value">--</span>
+                                    <span class="parameter-unit">%</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Humidifier Control -->
+                        <div class="parameter-group">
+                            <div class="group-label">💧 Humidifier Control</div>
+                            <div class="humidifier-status disabled">
+                                <span class="status-icon">🔇</span>
+                                <span class="status-text">DISABLED</span>
+                            </div>
+                            <div style="font-size: 0.85rem; color: #999; margin-top: 8px; text-align: center;">
+                                Auto-trigger: 60% | Auto-stop: 75%
+                            </div>
+                        </div>
+
+                        <div class="disconnected-overlay">
+                            <div class="disconnected-overlay-icon">⚠️</div>
+                            <div class="disconnected-overlay-title">Not Connected</div>
+                            <div class="disconnected-overlay-text">This sensor is currently not connected to the system</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (!data || !data.is_valid) {
+                return `
+                    <div class="sensor-card error">
+                        <div class="sensor-header">
+                            <h2><span class="sensor-icon">⚠️</span>Sensor ${sensorId}</h2>
+                        </div>
+                        <div class="error-message">
+                            ${data?.error || 'No data available'}
+                        </div>
+                    </div>
+                `;
+            }
+
+            const sensorEnabled = sensorStates[sensorId].enabled;
+            const humidifierEnabled = humidifierStates[sensorId].enabled;
+            const humidifierActive = data.humidifier?.active || false;
+
+            if (!sensorEnabled) {
+                return `
+                    <div class="sensor-card disabled">
+                        <div class="sensor-header">
+                            <h2><span class="sensor-icon">📊</span>Sensor ${sensorId}</h2>
+                            <div class="sensor-controls">
+                                <button class="control-button disabled" onclick="toggleSensor(${sensorId})" title="Toggle sensor on/off">
+                                    <span class="button-icon">🔴</span>
+                                    <span class="button-text">OFF</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="disabled-content">
+                            <div class="disabled-content-icon">⏸️</div>
+                            <div class="disabled-content-title">Sensor Disabled</div>
+                            <div class="disabled-content-text">Click the ON button to enable sensor readings</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="sensor-card">
+                    <div class="sensor-header">
+                        <h2><span class="sensor-icon">📊</span>Sensor ${sensorId}</h2>
+                        <div class="sensor-controls">
+                            <button class="control-button enabled" onclick="toggleSensor(${sensorId})" title="Toggle sensor on/off">
+                                <span class="button-icon">🟢</span>
+                                <span class="button-text">ON</span>
+                            </button>
+                            <button class="control-button ${humidifierEnabled ? 'enabled' : 'disabled'}" onclick="toggleHumidifier(${sensorId})" title="Toggle humidifier on/off">
+                                <span class="button-icon">${humidifierEnabled ? '✅' : '❌'}</span>
+                                <span class="button-text">💧</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- NPK Parameters -->
+                    <div class="parameter-group">
+                        <div class="group-label">NPK Values</div>
+                        <div class="parameter">
+                            <span class="parameter-name">Nitrogen (N)</span>
+                            <span>
+                                <span class="parameter-value">${data.nitrogen !== null ? data.nitrogen.toFixed(1) : '--'}</span>
+                                <span class="parameter-unit">mg/kg</span>
+                            </span>
+                        </div>
+                        <div class="parameter">
+                            <span class="parameter-name">Phosphorus (P)</span>
+                            <span>
+                                <span class="parameter-value">${data.phosphorus !== null ? data.phosphorus.toFixed(1) : '--'}</span>
+                                <span class="parameter-unit">mg/kg</span>
+                            </span>
+                        </div>
+                        <div class="parameter">
+                            <span class="parameter-name">Potassium (K)</span>
+                            <span>
+                                <span class="parameter-value">${data.potassium !== null ? data.potassium.toFixed(1) : '--'}</span>
+                                <span class="parameter-unit">mg/kg</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Substrate Parameters -->
+                    <div class="parameter-group">
+                        <div class="group-label">📋 Substrate Properties</div>
+                        <div class="parameter">
+                            <span class="parameter-name">Substrate pH</span>
+                            <span>
+                                <span class="parameter-value">${data.ph !== null ? data.ph.toFixed(2) : '--'}</span>
+                                <span class="parameter-unit">pH</span>
+                            </span>
+                        </div>
+                        <div class="parameter">
+                            <span class="parameter-name">Electrical Conductivity</span>
+                            <span>
+                                <span class="parameter-value">${data.ec !== null ? data.ec.toFixed(2) : '--'}</span>
+                                <span class="parameter-unit">mS/cm</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Environment Parameters -->
+                    <div class="parameter-group">
+                        <div class="group-label">🌡️ Environment</div>
+                        <div class="parameter">
+                            <span class="parameter-name">Temperature</span>
+                            <span>
+                                <span class="parameter-value">${data.temperature !== null ? data.temperature.toFixed(1) : '--'}</span>
+                                <span class="parameter-unit">°C</span>
+                            </span>
+                        </div>
+                        <div class="parameter">
+                            <span class="parameter-name">Humidity</span>
+                            <span>
+                                <span class="parameter-value">${data.humidity !== null ? data.humidity.toFixed(1) : '--'}</span>
+                                <span class="parameter-unit">%</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Humidifier Control -->
+                    <div class="parameter-group">
+                        <div class="group-label">💧 Humidifier Control</div>
+                        <div class="humidifier-status ${!humidifierEnabled ? 'disabled' : (humidifierActive ? 'active' : 'inactive')}">
+                            <span class="status-icon">${!humidifierEnabled ? '🔇' : (humidifierActive ? '💧' : '⭕')}</span>
+                            <span class="status-text">${!humidifierEnabled ? 'DISABLED' : (humidifierActive ? 'ACTIVE' : 'IDLE')}</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: #999; margin-top: 8px; text-align: center;">
+                            Auto-trigger: 60% | Auto-stop: 75%
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Fetch and display sensor data
+        async function updateSensorData() {
+            try {
+                const response = await fetch(`${API_BASE}/api/sensors`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+
+                // Update status
+                const statusDot = document.querySelector('.status-dot');
+                const statusText = document.getElementById('statusText');
+                statusDot.classList.add('connected');
+                statusText.textContent = 'Connected';
+
+                // Update timestamp
+                document.getElementById('lastUpdate').textContent = formatTime(new Date());
+
+                // Check for humidity transitions and generate alerts
+                SENSOR_IDS.forEach(id => {
+                    const sensorData = data[id];
+                    if (sensorData && sensorData.is_valid && sensorData.humidity !== null && sensorData.humidity !== undefined) {
+                        const currentHumidity = sensorData.humidity;
+                        const previousHumidity = humidityState[id];
+                        
+                        // Detect humidity transitions
+                        if (previousHumidity !== null && previousHumidity !== undefined) {
+                            // Transition from above 60% to below 60%
+                            if (previousHumidity >= 60 && currentHumidity < 60) {
+                                showAlertPopup(
+                                    `⚠️ Low Humidity Alert - Sensor ${id}`,
+                                    `Humidity dropped to ${currentHumidity.toFixed(1)}% (below 60% threshold)`,
+                                    'warning'
+                                );
+                            }
+                            // Transition from below 60% to above 60%
+                            else if (previousHumidity < 60 && currentHumidity >= 60) {
+                                showAlertPopup(
+                                    `✅ Humidity Recovered - Sensor ${id}`,
+                                    `Humidity rose to ${currentHumidity.toFixed(1)}% (above 60% threshold)`,
+                                    'success'
+                                );
+                            }
+                        }
+                        
+                        // Update humidity state
+                        humidityState[id] = currentHumidity;
+                    }
+                });
+
+                // Render sensor cards
+                const container = document.getElementById('sensorsContainer');
+                let html = '';
+                SENSOR_IDS.forEach(id => {
+                    html += createSensorCard(id, data[id]);
+                });
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error fetching sensor data:', error);
+                const statusDot = document.querySelector('.status-dot');
+                const statusText = document.getElementById('statusText');
+                statusDot.classList.remove('connected');
+                statusText.textContent = 'Disconnected';
+
+                const container = document.getElementById('sensorsContainer');
+                container.innerHTML = `
+                    <div class="loading">
+                        <p>⚠️ Unable to connect to sensor network</p>
+                        <p style="font-size: 0.9em; margin-top: 10px; color: #e74c3c;">
+                            ${error.message}
+                        </p>
+                    </div>
+                `;
+            }
+        }
+
+        // Initial load
+        updateSensorData();
+
+        // Poll for updates
+        setInterval(updateSensorData, POLL_INTERVAL);
+    </script>
+</body>
+</html>
